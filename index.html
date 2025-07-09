@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pagamento Seguro via PIX</title>
+    <!-- Incluindo Tailwind CSS para um design moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluindo a biblioteca de QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilização base com a fonte Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Efeito de transição suave para elementos */
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+        /* Estilo customizado para o slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb; /* gray-200 */
+            border-radius: 9999px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #3b82f6; /* blue-500 */
+            border-radius: 50%;
+            cursor: pointer;
+            border: 4px solid white;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: #3b82f6; /* blue-500 */
+            border-radius: 50%;
+            cursor: pointer;
+            border: 4px solid white;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Container Principal -->
+    <div id="payment-container" class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-6">
+
+        <!-- Seção de Seleção de Valor -->
+        <div id="valor-section">
+            <h2 class="text-2xl font-bold text-gray-800 text-center">Pagamento via PIX</h2>
+            <p class="text-center text-gray-500 mt-2">Selecione o valor desejado abaixo para gerar o seu código PIX.</p>
+            
+            <!-- Display do Valor -->
+            <div class="text-center my-6">
+                <span class="text-5xl font-bold text-blue-600">R$ <span id="valor-display">75</span>,00</span>
+            </div>
+
+            <!-- Slider de Valor -->
+            <div class="space-y-3">
+                 <input type="range" id="valor-slider" min="1" max="150" value="75" class="w-full">
+                 <div class="flex justify-between text-sm text-gray-500">
+                     <span>R$1</span>
+                     <span>R$150</span>
+                 </div>
+            </div>
+
+            <button id="gerar-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all mt-6">
+                <span id="gerar-btn-text">Gerar PIX</span>
+                <span id="gerar-spinner" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Gerando...
+                </span>
+            </button>
+        </div>
+
+        <!-- Seção de Pagamento PIX -->
+        <div id="pix-section" class="hidden space-y-4">
+            <h3 class="text-xl font-bold text-gray-800 text-center">Pague para continuar</h3>
+            <p class="text-center text-gray-500">Copie o código ou escaneie o QR Code. <br/><strong>Aguarde nesta página após o pagamento.</strong></p>
+            
+            <!-- QR Code -->
+            <div id="qrcode-container" class="flex justify-center p-4 bg-gray-50 rounded-lg">
+                <!-- O QR Code será inserido aqui pelo JavaScript -->
+            </div>
+            
+            <!-- PIX Copia e Cola -->
+            <div>
+                <label for="pix-code-input" class="text-sm font-medium text-gray-700">PIX Copia e Cola</label>
+                <div class="relative mt-1">
+                    <input type="text" id="pix-code-input" class="w-full p-3 pr-12 border border-gray-300 rounded-lg bg-gray-50 text-sm" readonly>
+                    <button id="copiar-btn" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    </button>
+                </div>
+            </div>
+
+             <!-- Status do Pagamento -->
+            <div id="payment-status" class="text-center text-yellow-600 bg-yellow-100 p-3 rounded-lg font-medium flex items-center justify-center gap-2">
+                 <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Aguardando pagamento...
+            </div>
+        </div>
+        
+        <!-- Seção de Confirmação -->
+        <div id="confirmacao-section" class="hidden text-center space-y-4 py-8">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <svg class="w-12 h-12 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Pagamento Aprovado!</h2>
+            <p class="text-gray-600">Você será redirecionado em instantes para o conteúdo exclusivo. Aguarde...</p>
+            <button id="acesso-btn" onclick="window.location.href='https://paygrupovip.shop/gabiluaprovado'" class="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all">
+                Acessar Conteúdo Agora
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Container para Notificações (Toast) -->
+    <div id="toast" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg text-sm transition-all transform translate-x-full opacity-0">
+        <!-- Mensagem de erro/sucesso -->
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- CONSTANTES E VARIÁVEIS DE ESTADO ---
+        const apiKey = "36165|qb2rN7PVaTsrLXF6QBsCJlBIKMUzcAL3yxfGWhnY1a820a31"; // Chave da API atualizada
+        const apiUrl = "https://api.pushinpay.com.br/api";
+        const redirectUrl = "https://t.me/+Tw6xKhkJYeg4NGE0"; // URL de redirecionamento para o Telegram
+        const pushcutUrl = 'https://api.pushcut.io/JX60URSeGYXjFKP4bbP9P/notifications/'; // URL para notificação
+
+        let transactionId = null;
+        let paymentCheckInterval = null;
+        let hasNotified = false;
+
+        // --- SELETORES DE ELEMENTOS DO DOM ---
+        const valorSlider = document.getElementById('valor-slider');
+        const valorDisplay = document.getElementById('valor-display');
+        const gerarBtn = document.getElementById('gerar-btn');
+        const gerarBtnText = document.getElementById('gerar-btn-text');
+        const gerarSpinner = document.getElementById('gerar-spinner');
+        const copiarBtn = document.getElementById('copiar-btn');
+        const pixCodeInput = document.getElementById('pix-code-input');
+        const qrcodeContainer = document.getElementById('qrcode-container');
+        const toast = document.getElementById('toast');
+
+        const valorSection = document.getElementById('valor-section');
+        const pixSection = document.getElementById('pix-section');
+        const confirmacaoSection = document.getElementById('confirmacao-section');
+        const paymentStatus = document.getElementById('payment-status');
+        
+        // --- FUNÇÕES ---
+
+        /**
+         * Exibe uma notificação (toast) na tela.
+         * @param {string} message - A mensagem a ser exibida.
+         * @param {string} type - O tipo de notificação ('success' ou 'error').
+         */
+        function showToast(message, type = 'error') {
+            toast.textContent = message;
+            toast.classList.remove('bg-red-500', 'bg-green-500', 'translate-x-full', 'opacity-0');
+            
+            if (type === 'success') {
+                toast.classList.add('bg-green-500');
+            } else {
+                toast.classList.add('bg-red-500');
+            }
+            
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0', 'opacity-100');
+                toast.classList.add('translate-x-full', 'opacity-0');
+            }, 3000);
+        }
+
+        /**
+         * Atualiza o valor exibido na tela conforme o slider é movido.
+         */
+        function updateValorDisplay() {
+            valorDisplay.textContent = valorSlider.value;
+        }
+        
+        /**
+         * Gera o QR Code a partir do código PIX.
+         * @param {string} pixCode - O código PIX (copia e cola).
+         */
+        function generateQRCode(pixCode) {
+            qrcodeContainer.innerHTML = '';
+            // Define typeNumber como 0 para permitir que a biblioteca escolha o tamanho ideal
+            // Isso corrige o erro "code length overflow" para códigos PIX longos.
+            const typeNumber = 0;
+            const errorCorrectionLevel = 'L';
+            const qr = qrcode(typeNumber, errorCorrectionLevel);
+            qr.addData(pixCode);
+            qr.make();
+            qrcodeContainer.innerHTML = qr.createImgTag(5, 8); // (cell size, margin)
+            qrcodeContainer.firstChild.classList.add('w-56', 'h-56', 'rounded-lg');
+        }
+
+        /**
+         * Copia o código PIX para a área de transferência.
+         * Usa um fallback para maior compatibilidade.
+         */
+        async function copyPixCode() {
+            const code = pixCodeInput.value;
+            if (!code) return;
+
+            try {
+                 // Método moderno, preferencial
+                await navigator.clipboard.writeText(code);
+                showToast("Código PIX copiado!", 'success');
+            } catch (err) {
+                // Fallback para navegadores mais antigos ou contextos inseguros
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                textArea.style.position = 'fixed'; // Evita rolagem
+                textArea.style.top = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("Código PIX copiado!", 'success');
+                } catch (execErr) {
+                    showToast("Falha ao copiar. Selecione e copie manualmente.", 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        /**
+         * Controla o estado de carregamento do botão.
+         * @param {boolean} isLoading - True para mostrar o spinner, false para mostrar o texto.
+         */
+        function setButtonLoading(isLoading) {
+            gerarBtn.disabled = isLoading;
+            if (isLoading) {
+                gerarBtnText.classList.add('hidden');
+                gerarSpinner.classList.remove('hidden');
+            } else {
+                gerarBtnText.classList.remove('hidden');
+                gerarSpinner.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Função principal para gerar a cobrança PIX.
+         */
+        async function handleGeneratePix() {
+            setButtonLoading(true);
+
+            const valor = parseFloat(valorSlider.value);
+            if (isNaN(valor) || valor < 1 || valor > 150) {
+                showToast("Por favor, selecione um valor válido.");
+                setButtonLoading(false);
+                return;
+            }
+
+            const valorEmCentavos = Math.round(valor * 100);
+
+            try {
+                const response = await fetch(`${apiUrl}/pix/cashIn`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ value: valorEmCentavos })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.qr_code) {
+                    transactionId = data.id;
+                    pixCodeInput.value = data.qr_code;
+                    generateQRCode(data.qr_code);
+
+                    // Transição da UI
+                    valorSection.classList.add('hidden');
+                    pixSection.classList.remove('hidden');
+
+                    // Começa a verificar o pagamento
+                    startPaymentCheck();
+
+                    // Envia notificação para o Pushcut (se necessário)
+                    if (!hasNotified) {
+                       fetch(`${pushcutUrl}Pix Gerado R$${valor},00`);
+                       hasNotified = true;
+                    }
+
+                } else {
+                    const errorMessage = data.message || "Erro desconhecido ao gerar PIX.";
+                    showToast(`Erro: ${errorMessage}`);
+                }
+            } catch (error) {
+                console.error("Erro na API ao gerar PIX:", error);
+                showToast("Falha de comunicação com o sistema de pagamento.");
+            } finally {
+                setButtonLoading(false);
+            }
+        }
+
+        /**
+         * Inicia a verificação periódica do status do pagamento.
+         */
+        function startPaymentCheck() {
+             if (paymentCheckInterval) {
+                clearInterval(paymentCheckInterval);
+            }
+            // Verifica a cada 3 segundos
+            paymentCheckInterval = setInterval(checkPaymentStatus, 3000);
+        }
+        
+        /**
+         * Verifica o status do pagamento na API.
+         */
+        async function checkPaymentStatus() {
+            if (!transactionId) return;
+
+            try {
+                const response = await fetch(`${apiUrl}/transactions/${transactionId}`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === "paid") {
+                    handlePaymentSuccess();
+                }
+                // Se não estiver pago, continua verificando silenciosamente.
+                // O status na tela já indica "Aguardando pagamento".
+
+            } catch (error) {
+                console.error("Erro ao verificar pagamento:", error);
+                // Para de verificar se houver um erro de rede para não sobrecarregar
+                clearInterval(paymentCheckInterval);
+                paymentStatus.textContent = "Erro ao verificar. Atualize a página.";
+                paymentStatus.classList.remove('bg-yellow-100', 'text-yellow-600');
+                paymentStatus.classList.add('bg-red-100', 'text-red-600');
+            }
+        }
+
+        /**
+         * Lida com o sucesso do pagamento, atualizando a UI e redirecionando.
+         */
+        function handlePaymentSuccess() {
+            clearInterval(paymentCheckInterval);
+            
+            // Transição da UI
+            pixSection.classList.add('hidden');
+            confirmacaoSection.classList.remove('hidden');
+
+            // Redirecionamento automático após 3 segundos
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 3000);
+        }
+
+        // --- ADICIONANDO EVENT LISTENERS ---
+        valorSlider.addEventListener('input', updateValorDisplay);
+        gerarBtn.addEventListener('click', handleGeneratePix);
+        copiarBtn.addEventListener('click', copyPixCode);
+
+        // --- INICIALIZAÇÃO ---
+        updateValorDisplay(); // Define o valor inicial no display
+    });
+    </script>
+</body>
+</html>
